@@ -1,0 +1,94 @@
+{% extends "baseHome.html" %}
+{% load static %}
+{% block title %}CineX — Cartelera y Snacks{% endblock %}
+
+
+{% block content %}
+<!-- ───────────── HERO ───────────── -->
+<div class="p-4 p-md-5 mb-4 bg-dark text-white rounded-3">
+ <div class="col-lg-8 px-0">
+   <h1 class="display-5"><i class="bi bi-popcorn me-2"></i>¡Bienvenido a CineX!</h1>
+   <p class="lead mb-4">Disfruta de las mejores películas y delicias recién hechas. Compra tus boletos y snacks en un par de clics.</p>
+   <a class="btn btn-primary btn-lg" href="#cartelera">Ver cartelera</a>
+ </div>
+</div>
+
+
+<!-- ───────────── CARTELERA ───────────── -->
+<h2 id="cartelera" class="mb-3"><i class="bi bi-film"></i> Cartelera</h2>
+
+
+{% if showtimes %}
+ <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+   {% for st in showtimes %}
+     <div class="col">
+       <div class="card h-100 shadow-sm">
+         {% if st.movie.poster %}
+           <img src="{{ st.movie.poster.url }}" class="card-img-top" alt="{{ st.movie }}">
+         {% else %}
+           <img src="{% static 'img/no-poster.svg' %}" class="card-img-top" alt="Sin póster">
+         {% endif %}
+         <div class="card-body d-flex flex-column">
+           <h5 class="card-title">{{ st.movie }}</h5>
+           <p class="card-text small text-muted mb-1">
+             {{ st.language }} · {{ st.format }} · {{ st.start_time|date:"d M H:i" }}
+           </p>
+
+
+           <p class="card-text flex-grow-1">{{ st.movie.synopsis|truncatechars:120 }}</p>
+           <a href="{% url 'showtime_detail' st.id %}" class="btn btn-primary w-100 mt-auto">
+             Comprar boletos
+           </a>
+
+
+         </div>
+       </div>
+     </div>
+   {% endfor %}
+ </div>
+{% else %}
+ <div class="alert alert-info"><i class="bi bi-info-circle-fill me-1"></i> Aún no hay funciones programadas.</div>
+{% endif %}
+
+
+<!-- ───────────── SNACKS DESTACADOS ───────────── -->
+<h2 class="mb-3"><i class="bi bi-cup-straw"></i> Snacks Destacados</h2>
+
+
+{% if snacks %}
+ <div class="row row-cols-2 row-cols-md-3 g-4">
+   {% for s in snacks %}
+     <div class="col">
+       <div class="card h-100 text-center shadow-sm">
+         {% if s.image %}
+           <img src="{{ s.image.url }}" class="card-img-top" style="height:180px; object-fit:cover;" alt="{{ s }}">
+         {% else %}
+           <img src="{% static 'img/no-snack.svg' %}" class="card-img-top" alt="Snack">
+         {% endif %}
+         <div class="card-body d-flex flex-column">
+           <h6 class="card-title">{{ s.name }}</h6>
+           <p class="card-text small text-muted">{{ s.category.name }}</p>
+           <p class="fw-bold mb-3">${{ s.price }}</p>
+           <a href="{% url 'snack_detail' s.id %}" class="btn btn-outline-light mt-auto">
+             Ver más
+           </a>
+
+
+         </div>
+       </div>
+     </div>
+   {% endfor %}
+ </div>
+ <div class="text-center mt-4">
+   <a href="{% url 'snack_list' %}" class="btn btn-secondary">
+     <i class="bi bi-cart3 me-1"></i> Ver todos los snacks
+   </a>
+
+
+ </div>
+{% else %}
+ <div class="alert alert-warning"><i class="bi bi-emoji-frown me-1"></i> No hay snacks disponibles.</div>
+{% endif %}
+{% endblock %}
+
+

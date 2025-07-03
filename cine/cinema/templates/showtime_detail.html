@@ -1,0 +1,34 @@
+{% extends "baseHome.html" %}
+{% load static %}
+{% block title %}{{ showtime.movie.title }} — {{ showtime.start_time|date:"d M Y H:i" }}{% endblock %}
+
+
+{% block content %}
+<div class="row gy-4">
+ <div class="col-md-4">
+   {% if showtime.movie.poster %}
+     <img src="{{ showtime.movie.poster.url }}" class="img-fluid rounded" alt="{{ showtime.movie.title }}">
+   {% else %}
+     <img src="{% static 'img/no-poster.svg' %}" class="img-fluid rounded" alt="Sin póster">
+   {% endif %}
+ </div>
+ <div class="col-md-8">
+   <h2>{{ showtime.movie.title }}</h2>
+   <p class="text-muted">
+     {{ showtime.language }} · {{ showtime.format }} · {{ showtime.start_time|date:"d M Y, H:i" }}<br>
+     Sala: {{ showtime.auditorium.name }} ({{ showtime.auditorium.cinema.name }})
+   </p>
+   <p>{{ showtime.movie.synopsis }}</p>
+   <p><strong>Duración:</strong> {{ showtime.movie.duration_min }} min &nbsp;|&nbsp;
+      <strong>Clasif.:</strong> {{ showtime.movie.rating }}</p>
+   <hr>
+   <h5>Comprar boletos</h5>
+   <p>Precio base: <strong>${{ showtime.base_price }}</strong></p>
+   <a href="{% url 'seat_selection' showtime.id %}" class="btn btn-primary">
+   Seleccionar asientos
+   </a>
+
+
+ </div>
+</div>
+{% endblock %}

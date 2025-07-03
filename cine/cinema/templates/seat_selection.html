@@ -1,0 +1,100 @@
+
+{% extends "baseHome.html" %}
+{% block content %}
+ <h2>Seleccionar asientos — {{ showtime.movie.title }}</h2>
+ <p class="text-muted">
+   Sala: {{ showtime.auditorium.name }} ({{ showtime.auditorium.cinema.name }}) |
+   Precio por asiento: <strong>${{ showtime.base_price }}</strong>
+ </p>
+
+
+ {% if no_seats %}
+   <div class="alert alert-warning">
+     <i class="bi bi-exclamation-triangle-fill me-1"></i>
+     Aún no se han configurado los asientos para esta sala.
+   </div>
+ {% else %}
+   <form method="post" class="row gx-4">
+     {% csrf_token %}
+
+
+     <!-- Mapa de asientos -->
+     <div class="col-md-8">
+       <div class="border bg-light p-3 rounded text-center">
+         {% for row, seats in grid.items %}
+           <div class="d-flex justify-content-center mb-2">
+             {% for seat in seats %}
+               {% if seat.id in taken %}
+                 <button class="btn btn-sm btn-danger me-1" disabled>
+                   {{ seat.row }}-{{ seat.col }}
+                 </button>
+               {% else %}
+                 <label class="me-1">
+                   <input type="checkbox"
+                          name="seats"
+                          value="{{ seat.id }}"
+                          class="btn-check"
+                          id="seat-{{ seat.id }}">
+                   <span class="btn btn-sm btn-outline-success">
+                     {{ seat.row }}-{{ seat.col }}
+                   </span>
+                 </label>
+               {% endif %}
+             {% endfor %}
+           </div>
+         {% endfor %}
+       </div>
+       <div class="mt-3 text-center">
+         <span class="badge bg-danger me-2">Reservado/Pagado</span>
+         <span class="badge bg-success">Disponible</span>
+       </div>
+     </div>
+
+
+     <!-- Panel de resumen -->
+     <div class="col-md-4">
+       <div class="card shadow-sm">
+         <div class="card-header bg-primary text-white">Tu selección</div>
+         <div class="card-body">
+           <ul id="selected-list" class="list-unstyled mb-3">
+             <li class="text-muted">(Sin asientos seleccionados)</li>
+           </ul>
+           <h5>Total: $<span id="total-price">0.00</span></h5>
+           <button type="submit" class="btn btn-primary w-100 mt-3">
+             Continuar y pagar
+           </button>
+         </div>
+       </div>
+     </div>
+   </form>
+ {% endif %}
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+ const unitPrice = parseFloat("{{ showtime.base_price }}") || 0;
+ const totalSpan = document.getElementById("total-price");
+ const listEl = document.getElementById("selected-list");
+ const checkboxes = document.querySelectorAll('input[name="seats"]');
+
+
+ function updateSummary() {
+   const selected = Array.from(checkboxes).filter(cb => cb.checked);
+   const labels = selected.map(cb => {
+     const text = cb.nextElementSibling.textContent.trim();
+     return text;
+   });
+   listEl.innerHTML = labels.length
+     ? labels.map(l => `<li>${l}</li>`).join("")
+     : `<li class="text-muted">(Sin asientos seleccionados)</li>`;
+   totalSpan.textContent = (labels.length * unitPrice).toFixed(2);
+ }
+
+
+ checkboxes.forEach(cb => cb.addEventListener("change", updateSummary));
+ updateSummary();
+});
+</script>
+{% endblock %}
