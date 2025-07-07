@@ -1,11 +1,17 @@
-
 {% extends "baseHome.html" %}
+
+
 {% block content %}
  <h2>Seleccionar asientos — {{ showtime.movie.title }}</h2>
- <p class="text-muted">
-   Sala: {{ showtime.auditorium.name }} ({{ showtime.auditorium.cinema.name }}) |
-   Precio por asiento: <strong>${{ showtime.base_price }}</strong>
- </p>
+
+
+ <!-- Aviso si no está logueado -->
+ {% if not user.is_authenticated %}
+   <div class="alert alert-info">
+     <i class="bi bi-info-circle-fill me-1"></i>
+     Por favor <a href="{% url 'login' %}?next={{ request.get_full_path }}">inicia sesión</a> para proceder con la compra.
+   </div>
+ {% endif %}
 
 
  {% if no_seats %}
@@ -30,12 +36,14 @@
                  </button>
                {% else %}
                  <label class="me-1">
-                   <input type="checkbox"
-                          name="seats"
-                          value="{{ seat.id }}"
-                          class="btn-check"
-                          id="seat-{{ seat.id }}">
-                   <span class="btn btn-sm btn-outline-success">
+                   <input
+                     type="checkbox"
+                     name="seats"
+                     value="{{ seat.id }}"
+                     class="btn-check"
+                     id="seat-{{ seat.id }}"
+                     {% if not user.is_authenticated %}disabled{% endif %}>
+                   <span class="btn btn-sm btn-outline-success {% if not user.is_authenticated %}opacity-50{% endif %}">
                      {{ seat.row }}-{{ seat.col }}
                    </span>
                  </label>
@@ -60,9 +68,26 @@
              <li class="text-muted">(Sin asientos seleccionados)</li>
            </ul>
            <h5>Total: $<span id="total-price">0.00</span></h5>
-           <button type="submit" class="btn btn-primary w-100 mt-3">
-             Continuar y pagar
-           </button>
+
+
+           {% if user.is_authenticated %}
+             <button
+               id="submit-btn"
+               type="submit"
+               class="btn btn-primary w-100 mt-3"
+               disabled>
+               Continuar y pagar
+             </button>
+           {% else %}
+             <button
+               type="button"
+               class="btn btn-secondary w-100 mt-3"
+               disabled>
+               Debes iniciar sesión
+             </button>
+           {% endif %}
+
+
          </div>
        </div>
      </div>
@@ -76,20 +101,30 @@
 document.addEventListener("DOMContentLoaded", () => {
  const unitPrice = parseFloat("{{ showtime.base_price }}") || 0;
  const totalSpan = document.getElementById("total-price");
- const listEl = document.getElementById("selected-list");
+ const listEl    = document.getElementById("selected-list");
  const checkboxes = document.querySelectorAll('input[name="seats"]');
+ const submitBtn = document.getElementById("submit-btn");
 
 
  function updateSummary() {
+   // Asientos seleccionados
    const selected = Array.from(checkboxes).filter(cb => cb.checked);
-   const labels = selected.map(cb => {
-     const text = cb.nextElementSibling.textContent.trim();
-     return text;
-   });
+   const labels = selected.map(cb =>
+     cb.nextElementSibling.textContent.trim()
+   );
+
+
+   // Actualiza la lista y el total
    listEl.innerHTML = labels.length
      ? labels.map(l => `<li>${l}</li>`).join("")
      : `<li class="text-muted">(Sin asientos seleccionados)</li>`;
    totalSpan.textContent = (labels.length * unitPrice).toFixed(2);
+
+
+   // Habilita o no el botón de compra
+   if (submitBtn) {
+     submitBtn.disabled = labels.length === 0;
+   }
  }
 
 

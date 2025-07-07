@@ -1,0 +1,31 @@
+{% extends "baseHome.html" %}
+{% block content %}
+ <h2>Confirmar Orden #{{ order.id }}</h2>
+
+
+ <ul class="list-group mb-3">
+   {% for ot in order.order_tickets.all %}
+     <li class="list-group-item d-flex justify-content-between">
+       Asiento {{ ot.ticket.seat.row }}-{{ ot.ticket.seat.col }}
+       <span>${{ ot.ticket.price }}</span>
+     </li>
+   {% endfor %}
+ </ul>
+
+
+ <p class="h5">Total: ${{ order.total_amount }}</p>
+
+
+ <form method="post" class="mt-4">
+   {% csrf_token %}
+   <div class="mb-3">
+     <label for="payment_method" class="form-label">Método de pago</label>
+     <select name="payment_method" id="payment_method" class="form-select">
+       {% for code,label in payment_choices %}
+         <option value="{{ code }}">{{ label }}</option>
+       {% endfor %}
+     </select>
+   </div>
+   <button type="submit" class="btn btn-success">Pagar ahora</button>
+ </form>
+{% endblock %}

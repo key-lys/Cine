@@ -1,0 +1,53 @@
+{% extends "baseHome.html" %}
+
+
+{% block content %}
+ <div class="card border-success mb-4">
+   <div class="card-header bg-success text-white">
+     <h4 class="mb-0">¡Compra exitosa! Orden #{{ order.id }}</h4>
+   </div>
+   <div class="card-body">
+     <!-- Ticket preview estilo “recibo” -->
+     <div class="d-flex justify-content-between mb-3" style="font-family: monospace;">
+       <div>
+         <p class="mb-1"><strong>CineJRK</strong></p>
+         <p class="mb-1">Película: {{ order.order_tickets.first.ticket.showtime.movie.title }}</p>
+         <p class="mb-1">
+           Función: {{ order.order_tickets.first.ticket.showtime.start_time|date:"d/m/Y H:i" }}
+         </p>
+         <p class="mb-1">
+           Sala: {{ order.order_tickets.first.ticket.showtime.auditorium.name }} 
+           ({{ order.order_tickets.first.ticket.showtime.auditorium.cinema.name }})
+         </p>
+         <p class="mb-1">Total: ${{ order.total_amount }}</p>
+       </div>
+       <!-- QR inline pequeño -->
+       <div>
+         <img
+           src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=ORD-{{ order.id }}"
+           alt="QR Ticket"
+           style="border:1px solid #ccc; background:#fff; padding:4px;">
+       </div>
+     </div>
+
+
+     <!-- Asientos -->
+     <h6>Asientos:</h6>
+     <div class="mb-3">
+       {% for ot in order.order_tickets.all %}
+         <span class="badge bg-primary text-white me-1 mb-1">
+           {{ ot.ticket.seat.row }}-{{ ot.ticket.seat.col }}
+         </span>
+       {% endfor %}
+     </div>
+
+
+     <!-- Botón para descargar PDF -->
+     <a href="{% url 'ticket_pdf' order_id=order.id %}"
+        class="btn btn-outline-success">
+       <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+       Descargar Ticket (PDF)
+     </a>
+   </div>
+ </div>
+{% endblock %}

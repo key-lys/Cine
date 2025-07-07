@@ -1,0 +1,57 @@
+{% extends "baseHome.html" %}
+{% block content %}
+ <h2>Mis Órdenes</h2>
+ {% if orders %}
+   <div class="list-group">
+     {% for order in orders %}
+       <div class="list-group-item d-flex justify-content-between align-items-start">
+         <div>
+           <h5>Orden #{{ order.id }}</h5>
+           <small class="text-muted">
+             Creada: {{ order.created|date:"d M Y H:i" }}
+           </small>
+           <p class="mb-1">
+             Total: <strong>${{ order.total_amount }}</strong> –
+             Estado:
+             {% if order.status == 'PEN' %}
+               <span class="badge bg-warning text-dark">Pendiente</span>
+             {% elif order.status == 'PAI' %}
+               <span class="badge bg-success">Pagada</span>
+             {% else %}
+               <span class="badge bg-secondary">Cancelada</span>
+             {% endif %}
+           </p>
+
+
+           <!-- Aquí listamos los asientos/tickets -->
+           <p class="mb-0">
+             Asientos:
+             {% for ot in order.order_tickets.all %}
+               <span class="badge bg-secondary text-white me-1">
+                 {{ ot.ticket.seat.row }}-{{ ot.ticket.seat.col }}
+               </span>
+             {% endfor %}
+           </p>
+         </div>
+         <div class="text-end">
+           {% if order.status == 'PEN' %}
+             <a href="{% url 'order_confirm' order_id=order.id %}"
+                class="btn btn-sm btn-primary mt-2">
+               Continuar pago
+             </a>
+           {% else %}
+             <a href="{% url 'order_success' order_id=order.id %}"
+                class="btn btn-sm btn-outline-secondary mt-2">
+               Ver detalle
+             </a>
+           {% endif %}
+         </div>
+       </div>
+     {% endfor %}
+   </div>
+ {% else %}
+   <div class="alert alert-info">
+     No has realizado ninguna orden aún.
+   </div>
+ {% endif %}
+{% endblock %}

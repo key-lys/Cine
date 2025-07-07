@@ -6,6 +6,8 @@ from django.db import models
 from django.utils import timezone
 
 
+
+
 # ──────────────────────────────── GENÉRICOS ────────────────────────────────
 class TimeStampedModel(models.Model):
     """Añade campos 'created' y 'updated' a las tablas."""
