@@ -4,50 +4,94 @@
 {% block content %}
  <div class="card border-success mb-4">
    <div class="card-header bg-success text-white">
-     <h4 class="mb-0">¡Compra exitosa! Orden #{{ order.id }}</h4>
+     {% if has_tickets and not has_snacks %}
+       <h4 class="mb-0">¡Boletos comprados con éxito! Orden #{{ order.id }}</h4>
+     {% elif has_snacks and not has_tickets %}
+       <h4 class="mb-0">¡Snacks agregados con éxito! Orden #{{ order.id }}</h4>
+     {% else %}
+       <h4 class="mb-0">¡Compra exitosa! Orden #{{ order.id }}</h4>
+     {% endif %}
    </div>
+
+
    <div class="card-body">
-     <!-- Ticket preview estilo “recibo” -->
-     <div class="d-flex justify-content-between mb-3" style="font-family: monospace;">
-       <div>
-         <p class="mb-1"><strong>CineJRK</strong></p>
-         <p class="mb-1">Película: {{ order.order_tickets.first.ticket.showtime.movie.title }}</p>
-         <p class="mb-1">
-           Función: {{ order.order_tickets.first.ticket.showtime.start_time|date:"d/m/Y H:i" }}
-         </p>
-         <p class="mb-1">
-           Sala: {{ order.order_tickets.first.ticket.showtime.auditorium.name }} 
-           ({{ order.order_tickets.first.ticket.showtime.auditorium.cinema.name }})
-         </p>
-         <p class="mb-1">Total: ${{ order.total_amount }}</p>
+     {% if has_tickets %}
+       <div class="mb-4">
+         <h5 class="fw-bold">Detalles de Boletos</h5>
+         <div class="d-flex justify-content-between mb-3" style="font-family: monospace;">
+           <div>
+             <p class="mb-1"><strong>Cine.APIZACO</strong></p>
+             <p class="mb-1">
+               Película: {{ order.order_tickets.first.ticket.showtime.movie.title }}
+             </p>
+             <p class="mb-1">
+               Función: {{ order.order_tickets.first.ticket.showtime.start_time|date:"d/m/Y H:i" }}
+             </p>
+             <p class="mb-1">
+               Sala: {{ order.order_tickets.first.ticket.showtime.auditorium.name }}
+               ({{ order.order_tickets.first.ticket.showtime.auditorium.cinema.name }})
+             </p>
+             <p class="mb-1">Subtotal Boletos: ${{ ticket_total|floatformat:2 }}</p>
+           </div>
+           <div>
+             <img
+               src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=ORD-{{ order.id }}-TICKETS"
+               alt="QR Tickets"
+               style="border:1px solid #ccc; background:#fff; padding:4px;">
+             <p class="small text-center mt-1">QR Boletos</p>
+           </div>
+         </div>
+         <h6>Asientos:</h6>
+         <div class="mb-3">
+           {% for ot in order.order_tickets.all %}
+             <span class="badge bg-primary text-white me-1 mb-1">
+               {{ ot.ticket.seat.row }}-{{ ot.ticket.seat.col }}
+             </span>
+           {% endfor %}
+         </div>
+         <a href="{% url 'ticket_pdf' order_id=order.id %}"
+            class="btn btn-outline-success btn-sm me-2">
+           <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+           Descargar Ticket (PDF)
+         </a>
        </div>
-       <!-- QR inline pequeño -->
-       <div>
-         <img
-           src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=ORD-{{ order.id }}"
-           alt="QR Ticket"
-           style="border:1px solid #ccc; background:#fff; padding:4px;">
+     {% endif %}
+
+
+     {% if has_snacks %}
+       <div class="mb-4">
+         <h5 class="fw-bold">Resumen de Snacks</h5>
+         <table class="table">
+           <thead>
+             <tr>
+               <th>Producto</th>
+               <th>Cantidad</th>
+               <th>Precio U.</th>
+               <th>Subtotal</th>
+             </tr>
+           </thead>
+           <tbody>
+             {% for os in order.order_snacks.all %}
+             <tr>
+               <td>{{ os.snack.name }}</td>
+               <td>{{ os.qty }}</td>
+               <td>${{ os.price|floatformat:2 }}</td>
+               <td>${{ os.line_total|floatformat:2 }}</td>
+             </tr>
+             {% endfor %}
+           </tbody>
+         </table>
+         <p class="text-end"><strong>Subtotal Snacks: ${{ snack_total|floatformat:2 }}</strong></p>
        </div>
+     {% endif %}
+
+
+     <!-- Total general -->
+     <div class="mt-4">
+       <h5 class="text-end">
+         Total Pagado: <span class="text-primary">${{ order.total_amount|floatformat:2 }}</span>
+       </h5>
      </div>
-
-
-     <!-- Asientos -->
-     <h6>Asientos:</h6>
-     <div class="mb-3">
-       {% for ot in order.order_tickets.all %}
-         <span class="badge bg-primary text-white me-1 mb-1">
-           {{ ot.ticket.seat.row }}-{{ ot.ticket.seat.col }}
-         </span>
-       {% endfor %}
-     </div>
-
-
-     <!-- Botón para descargar PDF -->
-     <a href="{% url 'ticket_pdf' order_id=order.id %}"
-        class="btn btn-outline-success">
-       <i class="bi bi-file-earmark-pdf-fill me-1"></i>
-       Descargar Ticket (PDF)
-     </a>
    </div>
  </div>
 {% endblock %}

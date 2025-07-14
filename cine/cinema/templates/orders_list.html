@@ -1,54 +1,160 @@
 {% extends "baseHome.html" %}
 {% block content %}
- <h2>Mis Órdenes</h2>
+ <h2 class="mb-4">Mis Órdenes</h2>
+
+
  {% if orders %}
-   <div class="list-group">
-     {% for order in orders %}
-       <div class="list-group-item d-flex justify-content-between align-items-start">
+   {% for order in orders %}
+     <div class="card mb-4 shadow-sm
+         {% if order.status == 'PAI' %}border-success
+         {% elif order.status == 'PEN' %}border-warning
+         {% else %}border-secondary{% endif %}">
+       <div class="card-header d-flex justify-content-between align-items-center
+           {% if order.status == 'PAI' %}bg-success text-white
+           {% elif order.status == 'PEN' %}bg-warning text-dark
+           {% else %}bg-secondary text-white{% endif %}">
          <div>
-           <h5>Orden #{{ order.id }}</h5>
+           <h5 class="mb-0">Orden #{{ order.id }}</h5>
            <small class="text-muted">
-             Creada: {{ order.created|date:"d M Y H:i" }}
+             Creada: {{ order.created|date:"d/m/Y H:i" }}
            </small>
-           <p class="mb-1">
-             Total: <strong>${{ order.total_amount }}</strong> –
-             Estado:
-             {% if order.status == 'PEN' %}
-               <span class="badge bg-warning text-dark">Pendiente</span>
-             {% elif order.status == 'PAI' %}
-               <span class="badge bg-success">Pagada</span>
-             {% else %}
-               <span class="badge bg-secondary">Cancelada</span>
-             {% endif %}
-           </p>
-
-
-           <!-- Aquí listamos los asientos/tickets -->
-           <p class="mb-0">
-             Asientos:
-             {% for ot in order.order_tickets.all %}
-               <span class="badge bg-secondary text-white me-1">
-                 {{ ot.ticket.seat.row }}-{{ ot.ticket.seat.col }}
-               </span>
-             {% endfor %}
-           </p>
          </div>
-         <div class="text-end">
-           {% if order.status == 'PEN' %}
-             <a href="{% url 'order_confirm' order_id=order.id %}"
-                class="btn btn-sm btn-primary mt-2">
-               Continuar pago
-             </a>
-           {% else %}
-             <a href="{% url 'order_success' order_id=order.id %}"
-                class="btn btn-sm btn-outline-secondary mt-2">
-               Ver detalle
-             </a>
+         <span class="badge
+             {% if order.status == 'PAI' %}bg-success
+             {% elif order.status == 'PEN' %}bg-warning text-dark
+             {% else %}bg-secondary{% endif %}">
+           {% if order.status == 'PAI' %}Pagada
+           {% elif order.status == 'PEN' %}Pendiente
+           {% else %}Cancelada{% endif %}
+         </span>
+       </div>
+
+
+       <div class="card-body">
+         <div class="accordion" id="accordion-{{ order.id }}">
+           {% if order.order_tickets.count %}
+           <div class="accordion-item">
+             <h2 class="accordion-header" id="heading-T{{ order.id }}">
+               <button class="accordion-button collapsed" type="button"
+                       data-bs-toggle="collapse"
+                       data-bs-target="#collapse-T{{ order.id }}"
+                       aria-expanded="false"
+                       aria-controls="collapse-T{{ order.id }}">
+                 <i class="bi bi-film me-2"></i> Boletos ({{ order.order_tickets.count }})
+               </button>
+             </h2>
+             <div id="collapse-T{{ order.id }}"
+                  class="accordion-collapse collapse"
+                  data-bs-parent="#accordion-{{ order.id }}">
+               <div class="accordion-body p-0">
+                 <table class="table mb-0">
+                   <thead class="table-light">
+                     <tr>
+                       <th>Asiento</th>
+                       <th>Sala</th>
+                       <th>Precio</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {% for ot in order.order_tickets.all %}
+                     <tr>
+                       <td>{{ ot.ticket.seat.row }}-{{ ot.ticket.seat.col }}</td>
+                       <td>
+                         {{ ot.ticket.showtime.auditorium.name }}
+                         ({{ ot.ticket.showtime.auditorium.cinema.name }})
+                       </td>
+                       <td>${{ ot.ticket.price|floatformat:2 }}</td>
+                     </tr>
+                     {% endfor %}
+                   </tbody>
+                 </table>
+               </div>
+             </div>
+           </div>
+           {% endif %}
+
+
+           {% if order.order_snacks.count %}
+           <div class="accordion-item">
+             <h2 class="accordion-header" id="heading-S{{ order.id }}">
+               <button class="accordion-button collapsed" type="button"
+                       data-bs-toggle="collapse"
+                       data-bs-target="#collapse-S{{ order.id }}"
+                       aria-expanded="false"
+                       aria-controls="collapse-S{{ order.id }}">
+                 <i class="bi bi-basket2 me-2"></i> Snacks ({{ order.order_snacks.count }})
+               </button>
+             </h2>
+             <div id="collapse-S{{ order.id }}"
+                  class="accordion-collapse collapse"
+                  data-bs-parent="#accordion-{{ order.id }}">
+               <div class="accordion-body p-0">
+                 <table class="table mb-0">
+                   <thead class="table-light">
+                     <tr>
+                       <th>Producto</th>
+                       <th>Cantidad</th>
+                       <th>Precio U.</th>
+                       <th>Subtotal</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {% for os in order.order_snacks.all %}
+                     <tr>
+                       <td>{{ os.snack.name }}</td>
+                       <td>{{ os.qty }}</td>
+                       <td>${{ os.price|floatformat:2 }}</td>
+                       <td>${{ os.line_total|floatformat:2 }}</td>
+                     </tr>
+                     {% endfor %}
+                   </tbody>
+                 </table>
+               </div>
+             </div>
+           </div>
            {% endif %}
          </div>
+
+
+         <div class="d-flex justify-content-between align-items-center mt-3">
+           <h5 class="mb-0">
+             Total: <span class="text-primary">${{ order.total_amount|floatformat:2 }}</span>
+           </h5>
+
+
+           {% if order.status == 'PEN' %}
+           <div class="d-flex gap-2">
+             <!-- Continuar pago -->
+             <a href="{% url 'order_confirm' order_id=order.id %}"
+                class="btn btn-sm btn-primary">
+               <i class="bi bi-credit-card me-1"></i> Continuar pago
+             </a>
+
+
+             <!-- Cancelar orden -->
+             <form method="post"
+                   action="{% url 'order_cancel' order_id=order.id %}"
+                   style="display:inline">
+               {% csrf_token %}
+               <button type="submit"
+                       class="btn btn-sm btn-danger"
+                       onclick="return confirm('¿Seguro que cancelar la orden #{{ order.id }}?');">
+                 <i class="bi bi-x-circle me-1"></i> Cancelar
+               </button>
+             </form>
+           </div>
+           {% else %}
+             <a href="{% url 'order_success' order_id=order.id %}"
+                class="btn btn-sm btn-outline-secondary">
+               <i class="bi bi-eye me-1"></i> Ver detalle
+             </a>
+           {% endif %}
+
+
+         </div>
        </div>
-     {% endfor %}
-   </div>
+     </div>
+   {% endfor %}
  {% else %}
    <div class="alert alert-info">
      No has realizado ninguna orden aún.
